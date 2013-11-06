@@ -187,6 +187,7 @@ static const struct android_id_info android_ids[] = {
     { "qcom_oncrpc", AID_QCOM_ONCRPC, },
     { "qcom_diag", AID_QCOM_DIAG, },
     { "net_bt_stack",  AID_NET_BT_STACK, },
+    { "qcom_diag", AID_QCOM_DIAG, },
 
 #if defined(MOTOROLA_UIDS)
     { "mot_osh",   AID_MOT_OSH, },

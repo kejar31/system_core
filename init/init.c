@@ -63,6 +63,7 @@
 #include "util.h"
 #include "ueventd.h"
 #include "watchdogd.h"
+#include "vendor_init.h"
 
 struct selabel_handle *sehandle;
 struct selabel_handle *sehandle_prop;
@@ -162,6 +163,7 @@ static const char *expand_environment(const char *val)
     /* caller free */
     return expanded;
 }
+
 
 /* add_environment - add "key=value" to the current environment */
 int add_environment(const char *key, const char *val)
@@ -814,8 +816,10 @@ static void import_kernel_nv(char *name, int for_emulator)
             emmc_boot = 1;
         }
 #endif
+
     } else if (!strcmp(name,BOARD_CHARGING_CMDLINE_NAME)) {
         strlcpy(battchg_pause, value, sizeof(battchg_pause));
+
     } else if (!strncmp(name, "androidboot.", 12) && name_len > 12) {
         const char *boot_prop_name = name + 12;
         char prop[PROP_NAME_MAX];
@@ -911,6 +915,11 @@ static int property_service_init_action(int nargs, char **args)
      * that /data/local.prop cannot interfere with them.
      */
     start_property_service();
+
+    /* update with vendor-specific property runtime
+     * overrides
+     */
+    vendor_load_properties();
     return 0;
 }
 
@@ -1196,6 +1205,12 @@ int main(int argc, char **argv)
             init_parse_config_file("/init.target.rc");
     }
 
+    /* Check for a target specific initialisation file and read if present */
+    if (access("/init.target.rc", R_OK) == 0) {
+        INFO("Reading target specific config file");
+            init_parse_config_file("/init.target.rc");
+    }
+
     action_for_each_trigger("early-init", action_add_queue_tail);
 
     queue_builtin_action(wait_for_coldboot_done_action, "wait_for_coldboot_done");
@@ -1209,6 +1224,7 @@ int main(int argc, char **argv)
     /* skip mounting filesystems in charger mode */
     if (!is_charger) {
         action_for_each_trigger("early-fs", action_add_queue_tail);
+
         if(emmc_boot) {
             action_for_each_trigger("emmc-fs", action_add_queue_tail);
         } else {

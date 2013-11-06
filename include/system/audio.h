@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 The Android Open Source Project
- * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,12 @@ __BEGIN_DECLS
 
 /* device address used to refer to the standard remote submix */
 #define AUDIO_REMOTE_SUBMIX_DEVICE_ADDRESS "0"
+
+#define AMR_FRAMESIZE 32
+#define QCELP_FRAMESIZE 35
+#define EVRC_FRAMESIZE 23
+#define AMR_WB_FRAMESIZE 61
+#define AAC_FRAMESIZE 2048
 
 typedef int audio_io_handle_t;
 
@@ -176,6 +182,7 @@ typedef enum {
     AUDIO_FORMAT_HE_AAC_V1           = 0x05000000UL,
     AUDIO_FORMAT_HE_AAC_V2           = 0x06000000UL,
     AUDIO_FORMAT_VORBIS              = 0x07000000UL,
+
 #ifdef QCOM_HARDWARE
     AUDIO_FORMAT_EVRC                = 0x08000000UL,
     AUDIO_FORMAT_QCELP               = 0x09000000UL,
@@ -231,6 +238,7 @@ enum {
     AUDIO_CHANNEL_OUT_MONO     = AUDIO_CHANNEL_OUT_FRONT_LEFT,
     AUDIO_CHANNEL_OUT_STEREO   = (AUDIO_CHANNEL_OUT_FRONT_LEFT |
                                   AUDIO_CHANNEL_OUT_FRONT_RIGHT),
+
 #ifdef QCOM_HARDWARE
     AUDIO_CHANNEL_OUT_2POINT1  = (AUDIO_CHANNEL_OUT_FRONT_LEFT |
                                   AUDIO_CHANNEL_OUT_FRONT_RIGHT |
@@ -244,6 +252,7 @@ enum {
                                   AUDIO_CHANNEL_OUT_FRONT_RIGHT |
                                   AUDIO_CHANNEL_OUT_FRONT_CENTER |
                                   AUDIO_CHANNEL_OUT_BACK_CENTER),
+
 #ifdef QCOM_HARDWARE
     AUDIO_CHANNEL_OUT_PENTA =    (AUDIO_CHANNEL_OUT_QUAD |
                                   AUDIO_CHANNEL_OUT_FRONT_CENTER),
@@ -254,6 +263,7 @@ enum {
                                   AUDIO_CHANNEL_OUT_LOW_FREQUENCY |
                                   AUDIO_CHANNEL_OUT_BACK_LEFT |
                                   AUDIO_CHANNEL_OUT_BACK_RIGHT),
+
 #ifdef QCOM_HARDWARE
     AUDIO_CHANNEL_OUT_6POINT1  = (AUDIO_CHANNEL_OUT_FRONT_LEFT |
                                   AUDIO_CHANNEL_OUT_FRONT_RIGHT |
@@ -262,6 +272,7 @@ enum {
                                   AUDIO_CHANNEL_OUT_BACK_LEFT |
                                   AUDIO_CHANNEL_OUT_BACK_RIGHT |
                                   AUDIO_CHANNEL_OUT_BACK_CENTER),
+
 #endif
     // matches the correct AudioFormat.CHANNEL_OUT_7POINT1_SURROUND definition for 7.1
     AUDIO_CHANNEL_OUT_7POINT1  = (AUDIO_CHANNEL_OUT_FRONT_LEFT |
@@ -314,11 +325,13 @@ enum {
     AUDIO_CHANNEL_IN_BACK_LEFT       = 0x100000,
     AUDIO_CHANNEL_IN_BACK_RIGHT      = 0x200000,
 #endif
-
     AUDIO_CHANNEL_IN_MONO   = AUDIO_CHANNEL_IN_FRONT,
     AUDIO_CHANNEL_IN_STEREO = (AUDIO_CHANNEL_IN_LEFT | AUDIO_CHANNEL_IN_RIGHT),
     AUDIO_CHANNEL_IN_FRONT_BACK = (AUDIO_CHANNEL_IN_FRONT | AUDIO_CHANNEL_IN_BACK),
 #ifdef QCOM_HARDWARE
+    AUDIO_CHANNEL_IN_MONO   = AUDIO_CHANNEL_IN_FRONT,
+    AUDIO_CHANNEL_IN_STEREO = (AUDIO_CHANNEL_IN_LEFT | AUDIO_CHANNEL_IN_RIGHT),
+    AUDIO_CHANNEL_IN_FRONT_BACK = (AUDIO_CHANNEL_IN_FRONT | AUDIO_CHANNEL_IN_BACK),
     AUDIO_CHANNEL_IN_5POINT1 = (AUDIO_CHANNEL_IN_FRONT_LEFT |
                                AUDIO_CHANNEL_IN_FRONT_RIGHT |
                                AUDIO_CHANNEL_IN_FRONT_CENTER |
@@ -328,6 +341,7 @@ enum {
     AUDIO_CHANNEL_IN_VOICE_UPLINK_MONO = (AUDIO_CHANNEL_IN_VOICE_UPLINK | AUDIO_CHANNEL_IN_MONO),
     AUDIO_CHANNEL_IN_VOICE_DNLINK_MONO = (AUDIO_CHANNEL_IN_VOICE_DNLINK | AUDIO_CHANNEL_IN_MONO),
     AUDIO_CHANNEL_IN_VOICE_CALL_MONO   = (AUDIO_CHANNEL_IN_VOICE_UPLINK_MONO | AUDIO_CHANNEL_IN_VOICE_DNLINK_MONO),
+
 #endif
     AUDIO_CHANNEL_IN_ALL    = (AUDIO_CHANNEL_IN_LEFT |
                                AUDIO_CHANNEL_IN_RIGHT |
@@ -345,7 +359,8 @@ enum {
                                AUDIO_CHANNEL_IN_5POINT1 |
 #endif
                                AUDIO_CHANNEL_IN_VOICE_UPLINK |
-                               AUDIO_CHANNEL_IN_VOICE_DNLINK)
+                               AUDIO_CHANNEL_IN_VOICE_DNLINK |
+                               AUDIO_CHANNEL_IN_5POINT1),
 };
 
 typedef uint32_t audio_channel_mask_t;
@@ -406,6 +421,11 @@ enum {
     AUDIO_DEVICE_OUT_FM                        = 0x80000,
     AUDIO_DEVICE_OUT_FM_TX                     = 0x100000,
 #endif
+    AUDIO_DEVICE_OUT_ANC_HEADSET               = 0x10000,
+    AUDIO_DEVICE_OUT_ANC_HEADPHONE             = 0x20000,
+    AUDIO_DEVICE_OUT_PROXY                     = 0x40000,
+    AUDIO_DEVICE_OUT_FM                        = 0x80000,
+    AUDIO_DEVICE_OUT_FM_TX                     = 0x100000,
     AUDIO_DEVICE_OUT_DEFAULT                   = AUDIO_DEVICE_BIT_DEFAULT,
     AUDIO_DEVICE_OUT_ALL      = (AUDIO_DEVICE_OUT_EARPIECE |
                                  AUDIO_DEVICE_OUT_SPEAKER |
@@ -652,7 +672,7 @@ static inline bool audio_is_usb_device(audio_devices_t device)
 
 static inline bool audio_is_remote_submix_device(audio_devices_t device)
 {
-    if ((device & AUDIO_DEVICE_OUT_REMOTE_SUBMIX) == AUDIO_DEVICE_OUT_REMOTE_SUBMIX
+    if ((device & AUDIO_DEVICE_BIT_IN | device & AUDIO_DEVICE_OUT_REMOTE_SUBMIX) == AUDIO_DEVICE_OUT_REMOTE_SUBMIX
             || (device & AUDIO_DEVICE_IN_REMOTE_SUBMIX) == AUDIO_DEVICE_IN_REMOTE_SUBMIX)
         return true;
     else
@@ -739,6 +759,7 @@ static inline bool audio_is_valid_format(audio_format_t format)
     case AUDIO_FORMAT_HE_AAC_V1:
     case AUDIO_FORMAT_HE_AAC_V2:
     case AUDIO_FORMAT_VORBIS:
+
 #ifdef QCOM_HARDWARE
     case AUDIO_FORMAT_QCELP:
     case AUDIO_FORMAT_EVRC:

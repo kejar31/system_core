@@ -37,6 +37,12 @@
 #include <log/logd.h>
 #include <log/log.h>
 
+#ifdef MOTOROLA_LOG
+#if HAVE_LIBC_SYSTEM_PROPERTIES
+#include <sys/system_properties.h>
+#endif
+#endif
+
 #define LOG_BUF_SIZE	1024
 
 #if FAKE_LOG_DEVICE
