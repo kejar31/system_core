@@ -95,7 +95,6 @@ enum {
     CAMERA_MSG_RAW_BURST = 0x1000,        // dataCallback
 #else
     CAMERA_MSG_FOCUS_MOVE = 0x0800,       // notifyCallback
-
 #ifdef QCOM_HARDWARE
     CAMERA_MSG_STATS_DATA       = 0x1000,
     CAMERA_MSG_META_DATA = 0x2000,
@@ -105,13 +104,6 @@ enum {
 #endif
 #endif
     CAMERA_MSG_ALL_MSGS = 0xFFFF
-};
-
-/** meta data type in CameraMetaDataCallback */
-enum {
-    CAMERA_META_DATA_ASD = 0x001,    //ASD data
-    CAMERA_META_DATA_FD = 0x002,     //FD/FP data
-    CAMERA_META_DATA_HDR = 0x003,    //Auto HDR data
 };
 
 /** cmdType in sendCommand functions */
@@ -309,18 +301,6 @@ typedef struct camera_face {
      * -2000, -2000 if this is not supported.
      */
     int32_t mouth[2];
-    int32_t smile_degree;
-    int32_t smile_score;
-    int32_t blink_detected;
-    int32_t face_recognised;
-    int32_t gaze_angle;
-    int32_t updown_dir;
-    int32_t leftright_dir;
-    int32_t roll_dir;
-    int32_t left_right_gaze;
-    int32_t top_bottom_gaze;
-    int32_t leye_blink;
-    int32_t reye_blink;
 
 #ifdef QCOM_HARDWARE
     int32_t smile_degree;
